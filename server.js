@@ -22,9 +22,7 @@ app.use(cookieParser());
 app.use('/uploads', express.static(__dirname + '/uploads'))
 
 
-app.get('/', (req, res) => {
-	res.send('welcome')
-})
+
 const connectDB = async()=>{
 	try{
 		const connect = await mongoose.connect(process.env.DATABASE_URL);
