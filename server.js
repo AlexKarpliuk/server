@@ -20,12 +20,20 @@ app.use(cors({ credentials: true, origin: process.env.REACT_APP_BASE_CORS_URL })
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static(__dirname + '/uploads'))
+
+
 app.get('/', (req, res) => {
 	res.send('welcome')
 })
-
-mongoose.connect(process.env.DATABASE_URL);
-
+const connectDB = async()=>{
+	try{
+		const connect = await mongoose.connect(process.env.DATABASE_URL);
+		console.log(`MongoDB connected ${connect.connection.host}`)
+	} catch(error) {
+		console.log(error);
+		process.exit(1)
+	}
+}
 
 // Generate a salt to add to the hash
 const salt = bcrypt.genSaltSync(10);
@@ -175,10 +183,9 @@ app.get('/post/:id', async (req, res) => {
 	res.json(posts)
 });
 
-app.get('/', (req, res) => {
-	res.json('wu-tang')
+
+connectDB().then(()=>{
+	app.listen(process.env.REACT_APP_BASE_URL, ()=>{
+		console.log(`listening on ${process.env.REACT_APP_BASE_URL}`)
+	});
 })
-
-
-
-app.listen(process.env.REACT_APP_BASE_URL || 5000);
