@@ -23,11 +23,11 @@ app.use('/uploads', express.static(__dirname + '/uploads'))
 
 
 
-const connectDB = async()=>{
-	try{
+const connectDB = async () => {
+	try {
 		const connect = await mongoose.connect(process.env.DATABASE_URL);
 		console.log(`MongoDB connected ${connect.connection.host}`)
-	} catch(error) {
+	} catch (error) {
 		console.log(error);
 		process.exit(1)
 	}
@@ -182,8 +182,8 @@ app.get('/post/:id', async (req, res) => {
 });
 
 
-connectDB().then(()=>{
-	app.listen(process.env.REACT_APP_BASE_URL, ()=>{
+connectDB().then(() => {
+	app.listen(process.env.REACT_APP_BASE_URL, () => {
 		console.log(`listening on ${process.env.REACT_APP_BASE_URL}`)
 	});
 })
