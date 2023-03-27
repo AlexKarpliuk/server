@@ -20,6 +20,9 @@ app.use(cors({ credentials: true, origin: process.env.REACT_APP_BASE_CORS_URL })
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static(__dirname + '/uploads'))
+app.get('/', (req, res) => {
+	res.send('welcome')
+})
 
 mongoose.connect(process.env.DATABASE_URL);
 
@@ -171,6 +174,10 @@ app.get('/post/:id', async (req, res) => {
 		.populate('author', ['username']);
 	res.json(posts)
 });
+
+app.get('/', (req, res) => {
+	res.json('wu-tang')
+})
 
 
 
