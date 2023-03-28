@@ -11,27 +11,26 @@ mongoose.set('strictQuery', true);
 const multer = require('multer')
 const uploadMiddleware = multer({ dest: 'uploads/' })
 const fs = require('fs')
-// require('dotenv').config();
+require('dotenv').config();
 // const { info } = require('console')
 
 
 
-app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
+app.use(cors({ credentials: true, origin: process.env.REACT_APP_BASE_CORS_URL }));
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static(__dirname + '/uploads'))
 
 
-mongoose.connect('mongodb+srv://Alex:300010Sano@portfolio.7au2fgv.mongodb.net/?retryWrites=true&w=majority')
-// const connectDB = async () => {
-// 	try {
-// 		const connect = await mongoose.connect(process.env.DATABASE_URL);
-// 		console.log(`MongoDB connected ${connect.connection.host}`)
-// 	} catch (error) {
-// 		console.log(error);
-// 		process.exit(1)
-// 	}
-// }
+const connectDB = async () => {
+	try {
+		const connect = await mongoose.connect(process.env.DATABASE_URL);
+		console.log(`MongoDB connected ${connect.connection.host}`)
+	} catch (error) {
+		console.log(error);
+		process.exit(1)
+	}
+}
 
 // Generate a salt to add to the hash
 const salt = bcrypt.genSaltSync(10);
@@ -182,9 +181,8 @@ app.get('/post/:id', async (req, res) => {
 });
 
 
-// connectDB().then(() => {
-// 	app.listen(process.env.REACT_APP_BASE_URL, () => {
-// 		console.log(`listening on ${process.env.REACT_APP_BASE_URL}`)
-// 	});
-// })
-app.listen(5000)
+connectDB().then(() => {
+	app.listen(process.env.REACT_APP_BASE_URL, () => {
+		console.log(`listening on ${process.env.REACT_APP_BASE_URL}`)
+	});
+});
