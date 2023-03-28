@@ -183,6 +183,6 @@ app.get('/post/:id', async (req, res) => {
 
 connectDB().then(() => {
 	app.listen(process.env.REACT_APP_BASE_URL, () => {
-		console.log(`listening ${process.env.REACT_APP_BASE_URL}`)
+		console.log(`listening to the ${process.env.REACT_APP_BASE_URL}`)
 	});
 });
