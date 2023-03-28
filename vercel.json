@@ -28,12 +28,12 @@
 	"version": 2,
 	"builds": [
 		 {
-			  "src": "./index.js",
-			  "use": "@vercel/node"
+			  "src": "./index.py",
+			  "use": "@vercel/python"
 		 }
 	],
 	"rewrites": [
-		 { "source": "/(.*)", "destination": "src/app.js" }
+		 { "source": "/(.*)", "destination": "src/index.js" }
 	],
 	"headers": [
 		 {
@@ -43,7 +43,7 @@
 			]
 		 },
 		 {
-			"source": "https://alex-karpliuk-portfolio.vercel.app/(.*)",
+			"source": "/alex-karpliuk-portfolio.vercel.app/(.*)",
 			"headers": [
 			  { "key": "Access-Control-Allow-Origin", "value": "*" }
 			]
