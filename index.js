@@ -32,9 +32,9 @@ const connectDB = async () => {
 	}
 }
 
-app.get("/blog", (req, res) => {
-		res.header("Access-Control-Allow-Origin", process.env.REACT_APP_BASE_CORS_URL);
-});
+// app.get("/blog", (req, res) => {
+// 		res.header("Access-Control-Allow-Origin", process.env.REACT_APP_BASE_CORS_URL);
+// });
 
 // Generate a salt to add to the hash
 const salt = bcrypt.genSaltSync(10);
