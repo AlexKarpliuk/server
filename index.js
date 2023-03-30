@@ -101,6 +101,7 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 	}
 
 	const { token } = req.cookies;
+	console.log(token)
 	jwt.verify(token, secretKey, {}, async (err, info) => {
 		if (err) throw err;
 		const { title, summary, content } = req.body;
@@ -158,7 +159,6 @@ app.delete('/blog/edit/:id', async (req, res) => {
 			}
 		});
 	}
-
 	await Post.findByIdAndDelete(id);
 	res.status(200).json('Post deleted successfully');
 });
