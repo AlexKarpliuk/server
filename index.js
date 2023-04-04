@@ -9,17 +9,19 @@ const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
 mongoose.set('strictQuery', true);
 const multer = require('multer')
-const uploadMiddleware = multer({ dest: 'uploads/' })
-const fs = require('fs')
+const { GridFSBucket, GridFSBucketReadStream, ObjectId } = require('mongodb');
+const { Readable } = require('stream');
+const { MongoClient } = require('mongodb');
+
 require('dotenv').config();
+
 // const { info } = require('console')
-
-
 
 app.use(cors({ credentials: true, origin: process.env.REACT_APP_BASE_CORS_URL }));
 app.use(express.json());
 app.use(cookieParser());
-app.use('/uploads', express.static(__dirname + '/uploads'))
+// app.use('/uploads', express.static(__dirname + '/uploads'))
+
 
 
 const connectDB = async () => {
@@ -31,6 +33,20 @@ const connectDB = async () => {
 		process.exit(1)
 	}
 };
+const client = new MongoClient(process.env.DATABASE_URL, { useNewUrlParser: true });
+async function connect() {
+	try {
+		await client.connect();
+		console.log('Connected to MongoDB');
+	} catch (err) {
+		console.error(err);
+	}
+}
+connect();
+const storage = multer.memoryStorage();
+const uploadMiddleware = multer({ storage: storage });
+
+
 
 // Generate a salt to add to the hash
 const salt = bcrypt.genSaltSync(10);
@@ -75,7 +91,6 @@ app.post('/blog/login', async (req, res) => {
 	}
 });
 
-
 app.get('/blog/profile', (req, res) => {
 	const { token } = req.cookies;
 	jwt.verify(token, secretKey, {}, (err, info) => {
@@ -84,85 +99,110 @@ app.get('/blog/profile', (req, res) => {
 	})
 });
 
-
 app.post('/blog/logout', (req, res) => {
 	res.cookie('token', '').json('ok');
 });
 
 
-app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
-	let newPath = null;
-	if (req.file) {
-		const { originalname, path } = req.file;
-		const name = originalname.split('.');
-		const ext = name[name.length - 1];
-		newPath = path + '.' + ext;
-		fs.renameSync(path, newPath);
-	}
 
+
+
+
+app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 	const { token } = req.cookies;
-	console.log(token)
 	jwt.verify(token, secretKey, {}, async (err, info) => {
 		if (err) throw err;
 		const { title, summary, content } = req.body;
-		const postDoc = await Post.create({
-			title,
-			summary,
-			content,
-			cover: newPath,
-			author: info.id,
-		});
-		res.json(postDoc);
+
+		// Create a Readable stream from the uploaded file
+		const readableStream = new Readable();
+		readableStream.push(req.file.buffer);
+		readableStream.push(null);
+		// Initialize GridFSBucket and upload the file
+		const db = client.db();
+		const bucket = new GridFSBucket(db);
+		const filename = Date.now() + '_' + req.file.originalname;
+		const uploadStream = bucket.openUploadStream(filename);
+		const id = uploadStream.id;
+		readableStream.pipe(uploadStream);
+
+		uploadStream.on('finish', async () => {
+			const postDoc = await Post.create({
+				title,
+				summary,
+				content,
+				cover: id,
+				author: info.id,
+			});
+			res.json(postDoc);
+		})
 	})
 });
 
 
-app.put('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
-	let newPath = null;
-	if (req.file) {
-		const { originalname, path } = req.file;
-		const name = originalname.split('.');
-		const ext = name[name.length - 1];
-		newPath = path + '.' + ext;
-		fs.renameSync(path, newPath);
-	}
-
+app.put('/blog/update/:id', uploadMiddleware.single('file'), async (req, res) => {
 	const { token } = req.cookies;
+	const postId = req.params.id;
+
 	jwt.verify(token, secretKey, {}, async (err, info) => {
 		if (err) throw err;
-		const { id, title, summary, content } = req.body;
-		const postDoc = await Post.findById(id);
-		const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id);
-		if (!isAuthor) {
-			return res.status(400).json('you are not the author');
+		const { title, summary, content } = req.body;
+		const postDoc = await Post.findById(postId);
+
+		if (req.file) {
+			// Delete the old file from the GridFSBucket
+			const db = client.db();
+			const bucket = new GridFSBucket(db);
+			if (postDoc.cover) {
+				await bucket.delete(ObjectId(postDoc.cover));
+			}
+			const readableStream = new Readable();
+			readableStream.push(req.file.buffer);
+			readableStream.push(null);
+			// Create a new file on the GridFSBucket with the updated contents
+			const filename = Date.now() + '_' + req.file.originalname;
+			const uploadStream = bucket.openUploadStream(filename);
+			const id = uploadStream.id;
+			readableStream.pipe(uploadStream);
+			// Wait for the upload to complete and update the post
+			uploadStream.on('finish', async () => {
+				postDoc.title = title;
+				postDoc.summary = summary;
+				postDoc.content = content;
+				postDoc.cover = id;
+				await postDoc.save();
+				res.json(postDoc);
+			});
 		}
+
 		await postDoc.updateOne({
 			title,
 			summary,
 			content,
-			cover: newPath ? newPath : postDoc.cover,
 		})
 		res.json(postDoc);
-	})
-})
-
-
-app.delete('/blog/edit/:id', async (req, res) => {
-	const { id } = req.params;
-	const post = await Post.findById(id);
-
-	if (post.cover) {
-		fs.unlink(post.cover, (err) => {
-			if (err) {
-				console.error(err);
-				return res.status(500).send({ message: 'Error deleting cover image' });
-			}
-		});
-	}
-	await Post.findByIdAndDelete(id);
-	res.status(200).json('Post deleted successfully');
+		// const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id);
+		// if (!isAuthor) {
+		// 	return res.status(400).json('you are not the author');
+		// }
+	});
 });
 
+app.get('/post/:id/cover', async (req, res) => {
+	const db = client.db();
+	const bucket = new GridFSBucket(db);
+	const objectId = new ObjectId(req.params.id);
+
+	const downloadStream = bucket.openDownloadStream(objectId);
+	downloadStream.pipe(res);
+});
+
+app.get('/post/:id', async (req, res) => {
+	const { id } = req.params;
+	const posts = await Post.findById(id)
+		.populate('author', ['username']);
+	res.json(posts)
+});
 
 app.get('/blog/post', async (req, res) => {
 	const posts = await Post.find()
@@ -173,12 +213,21 @@ app.get('/blog/post', async (req, res) => {
 });
 
 
-app.get('/post/:id', async (req, res) => {
+
+app.delete('/blog/delete/:id', async (req, res) => {
 	const { id } = req.params;
-	const posts = await Post.findById(id)
-		.populate('author', ['username']);
-	res.json(posts)
+
+	const postDoc = await Post.findById(id);
+	// Delete the old file from the GridFSBucket
+	const db = client.db();
+	const bucket = new GridFSBucket(db);
+	if (postDoc.cover) {
+		await bucket.delete(ObjectId(postDoc.cover));
+	}
+	await Post.findByIdAndDelete(id);
+	res.status(200).json('Post deleted successfully');
 });
+
 
 
 connectDB().then(() => {
