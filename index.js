@@ -17,7 +17,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
 	origin: process.env.REACT_APP_BASE_CORS_URL,
-	credentials: true}));
+	credentials: true
+}));
 app.use((req, res, next) => {
 	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
 	res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
