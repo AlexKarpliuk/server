@@ -1,5 +1,4 @@
 const express = require('express')
-const app = express()
 const mongoose = require('mongoose')
 const User = require('./models/User')
 const Post = require('./models/Post')
@@ -12,8 +11,13 @@ const multer = require('multer')
 const cors = require('cors')
 require('dotenv').config();
 mongoose.set('strictQuery', true);
+const app = express()
 
-app.use(cors({ credentials: true, origin: process.env.REACT_APP_BASE_CORS_URL }));
+app.use(cors({ 
+	 origin: process.env.REACT_APP_BASE_CORS_URL,
+	 credentials: true,
+	 debug: true
+	 }));
 app.use(express.json());
 app.use(cookieParser());
 
