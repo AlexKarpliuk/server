@@ -107,20 +107,31 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 	jwt.verify(token, secretKey, {}, async (err, info) => {
 		if (err) throw err;
 		const { title, summary, content } = req.body;
-
-		// Create a Readable stream from the uploaded file
-		const readableStream = new Readable();
-		readableStream.push(req.file.buffer);
-		readableStream.push(null);
-		// Initialize GridFSBucket and upload the file
-		const db = client.db();
-		const bucket = new GridFSBucket(db);
-		const filename = Date.now() + '_' + req.file.originalname;
-		const uploadStream = bucket.openUploadStream(filename);
-		const id = uploadStream.id;
-		readableStream.pipe(uploadStream);
-		// Upload rest info from the form (pass cover:id)
-		uploadStream.on('finish', async () => {
+		let id = '';
+		if (req.file) {
+			// Create a Readable stream from the uploaded file
+			const readableStream = new Readable();
+			readableStream.push(req.file.buffer);
+			readableStream.push(null);
+			// Initialize GridFSBucket and upload the file
+			const db = client.db();
+			const bucket = new GridFSBucket(db);
+			const filename = Date.now() + '_' + req.file.originalname;
+			const uploadStream = bucket.openUploadStream(filename);
+			id = uploadStream.id.toString();;
+			readableStream.pipe(uploadStream);
+			// Upload rest info from the form (pass cover:id)
+			uploadStream.on('finish', async () => {
+				const postDoc = await Post.create({
+					title,
+					summary,
+					content,
+					cover: id,
+					author: info.id,
+				});
+				res.json(postDoc);
+			})
+		} else {
 			const postDoc = await Post.create({
 				title,
 				summary,
@@ -129,7 +140,7 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 				author: info.id,
 			});
 			res.json(postDoc);
-		})
+		}
 	})
 });
 
@@ -142,7 +153,7 @@ app.put('/blog/update/:id', uploadMiddleware.single('file'), async (req, res) =>
 		if (err) throw err;
 		const { title, summary, content } = req.body;
 		const postDoc = await Post.findById(postId);
-
+		let id = '';
 		if (req.file) {
 			// Delete the old file from the Bucket
 			const db = client.db();
@@ -156,7 +167,7 @@ app.put('/blog/update/:id', uploadMiddleware.single('file'), async (req, res) =>
 			// Create a new file on the Bucket with the updated contents
 			const filename = Date.now() + '_' + req.file.originalname;
 			const uploadStream = bucket.openUploadStream(filename);
-			const id = uploadStream.id;
+			id = uploadStream.id.toString();;
 			readableStream.pipe(uploadStream);
 			// Wait for the upload to complete and update the post
 			uploadStream.on('finish', async () => {
@@ -167,14 +178,16 @@ app.put('/blog/update/:id', uploadMiddleware.single('file'), async (req, res) =>
 				await postDoc.save();
 				res.json(postDoc);
 			});
+		} else {
+			// If no file
+			await postDoc.updateOne({
+				title,
+				summary,
+				content,
+				cover: id,
+			})
+			res.json(postDoc);
 		}
-		// If no file
-		await postDoc.updateOne({
-			title,
-			summary,
-			content,
-		})
-		res.json(postDoc);
 	});
 });
 
