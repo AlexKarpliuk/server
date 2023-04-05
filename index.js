@@ -1,5 +1,4 @@
 const express = require('express')
-const cors = require('cors')
 const app = express()
 const mongoose = require('mongoose')
 const User = require('./models/User')
@@ -7,21 +6,16 @@ const Post = require('./models/Post')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
-mongoose.set('strictQuery', true);
-const multer = require('multer')
-const { GridFSBucket, GridFSBucketReadStream, ObjectId } = require('mongodb');
+const { GridFSBucket, MongoClient, ObjectId } = require('mongodb');
 const { Readable } = require('stream');
-const { MongoClient } = require('mongodb');
-
+const multer = require('multer')
+const cors = require('cors')
 require('dotenv').config();
-
-// const { info } = require('console')
+mongoose.set('strictQuery', true);
 
 app.use(cors({ credentials: true, origin: process.env.REACT_APP_BASE_CORS_URL }));
 app.use(express.json());
 app.use(cookieParser());
-// app.use('/uploads', express.static(__dirname + '/uploads'))
-
 
 
 const connectDB = async () => {
@@ -33,6 +27,8 @@ const connectDB = async () => {
 		process.exit(1)
 	}
 };
+
+// Connect to the MongoDB and create the storage there
 const client = new MongoClient(process.env.DATABASE_URL, { useNewUrlParser: true });
 async function connect() {
 	try {
@@ -52,7 +48,7 @@ const uploadMiddleware = multer({ storage: storage });
 const salt = bcrypt.genSaltSync(10);
 const secretKey = '1234567890'
 
-
+// Register account, upload info to the mongodb, create password use bcrypt
 app.post('/blog/register', async (req, res) => {
 	try {
 		const { username, password } = req.body;
@@ -70,7 +66,7 @@ app.post('/blog/register', async (req, res) => {
 	}
 });
 
-
+// Login, find user in mongodb, if user?, create json web token
 app.post('/blog/login', async (req, res) => {
 	const { username, password } = req.body;
 	const userDoc = await User.findOne({ username });
@@ -91,6 +87,7 @@ app.post('/blog/login', async (req, res) => {
 	}
 });
 
+// Profile info
 app.get('/blog/profile', (req, res) => {
 	const { token } = req.cookies;
 	jwt.verify(token, secretKey, {}, (err, info) => {
@@ -99,15 +96,12 @@ app.get('/blog/profile', (req, res) => {
 	})
 });
 
+// Logout, clean up the token info
 app.post('/blog/logout', (req, res) => {
 	res.cookie('token', '').json('ok');
 });
 
-
-
-
-
-
+// Upload post info from the frontend to the MongoDB
 app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 	const { token } = req.cookies;
 	jwt.verify(token, secretKey, {}, async (err, info) => {
@@ -125,7 +119,7 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 		const uploadStream = bucket.openUploadStream(filename);
 		const id = uploadStream.id;
 		readableStream.pipe(uploadStream);
-
+		// Upload rest info from the form (pass cover:id)
 		uploadStream.on('finish', async () => {
 			const postDoc = await Post.create({
 				title,
@@ -139,7 +133,7 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 	})
 });
 
-
+// Update post, if file?.then delete old one, and upload new one, if !file?.then update rest info from the form
 app.put('/blog/update/:id', uploadMiddleware.single('file'), async (req, res) => {
 	const { token } = req.cookies;
 	const postId = req.params.id;
@@ -150,7 +144,7 @@ app.put('/blog/update/:id', uploadMiddleware.single('file'), async (req, res) =>
 		const postDoc = await Post.findById(postId);
 
 		if (req.file) {
-			// Delete the old file from the GridFSBucket
+			// Delete the old file from the Bucket
 			const db = client.db();
 			const bucket = new GridFSBucket(db);
 			if (postDoc.cover) {
@@ -159,7 +153,7 @@ app.put('/blog/update/:id', uploadMiddleware.single('file'), async (req, res) =>
 			const readableStream = new Readable();
 			readableStream.push(req.file.buffer);
 			readableStream.push(null);
-			// Create a new file on the GridFSBucket with the updated contents
+			// Create a new file on the Bucket with the updated contents
 			const filename = Date.now() + '_' + req.file.originalname;
 			const uploadStream = bucket.openUploadStream(filename);
 			const id = uploadStream.id;
@@ -174,29 +168,26 @@ app.put('/blog/update/:id', uploadMiddleware.single('file'), async (req, res) =>
 				res.json(postDoc);
 			});
 		}
-
+		// If no file
 		await postDoc.updateOne({
 			title,
 			summary,
 			content,
 		})
 		res.json(postDoc);
-		// const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id);
-		// if (!isAuthor) {
-		// 	return res.status(400).json('you are not the author');
-		// }
 	});
 });
 
+// Find the file (image) on DB and open downloadStream to display image use img tag.
 app.get('/post/:id/cover', async (req, res) => {
 	const db = client.db();
 	const bucket = new GridFSBucket(db);
 	const objectId = new ObjectId(req.params.id);
-
 	const downloadStream = bucket.openDownloadStream(objectId);
 	downloadStream.pipe(res);
 });
 
+// Find the post by id pass author info. In the Front (if id and author same? show edit button)
 app.get('/post/:id', async (req, res) => {
 	const { id } = req.params;
 	const posts = await Post.findById(id)
@@ -204,6 +195,7 @@ app.get('/post/:id', async (req, res) => {
 	res.json(posts)
 });
 
+// Set post limit, pass author info
 app.get('/blog/post', async (req, res) => {
 	const posts = await Post.find()
 		.populate('author', ['username'])
@@ -212,11 +204,9 @@ app.get('/blog/post', async (req, res) => {
 	res.json(posts)
 });
 
-
-
+// Delete post
 app.delete('/blog/delete/:id', async (req, res) => {
 	const { id } = req.params;
-
 	const postDoc = await Post.findById(id);
 	// Delete the old file from the GridFSBucket
 	const db = client.db();
@@ -228,8 +218,7 @@ app.delete('/blog/delete/:id', async (req, res) => {
 	res.status(200).json('Post deleted successfully');
 });
 
-
-
+// App listen
 connectDB().then(() => {
 	app.listen(process.env.REACT_APP_BASE_URL, () => {
 		console.log(`listening the ${process.env.REACT_APP_BASE_URL}`)
