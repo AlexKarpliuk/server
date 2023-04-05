@@ -162,7 +162,7 @@ app.put('/blog/update/:id', uploadMiddleware.single('file'), async (req, res) =>
 		if (err) throw err;
 		const { title, summary, content } = req.body;
 		const postDoc = await Post.findById(postId);
-		let id = '';
+		let id = postDoc.cover;
 		if (req.file) {
 			// Delete the old file from the Bucket
 			const db = client.db();
@@ -193,7 +193,7 @@ app.put('/blog/update/:id', uploadMiddleware.single('file'), async (req, res) =>
 				title,
 				summary,
 				content,
-				cover: id,
+				cover: postDoc.cover,
 			})
 			res.json(postDoc);
 		}
