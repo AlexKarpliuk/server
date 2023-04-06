@@ -17,9 +17,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
 	origin: process.env.REACT_APP_BASE_CORS_URL,
-	credentials: true,
-	methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-	allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept']
+	credentials: true
 }));
 app.use((req, res, next) => {
 	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
@@ -106,12 +104,13 @@ app.get('/blog/profile', (req, res) => {
 		jwt.verify(token, secretKey, {}, (err, info) => {
 			if (err) throw err;
 			res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-			res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 			res.setHeader('Access-Control-Allow-Credentials', true);
-			res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS, DELETE');
 			res.json(info);
 		})
 	}
+	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
+	res.setHeader('Access-Control-Allow-Credentials', true);
+
 });
 
 // Logout, clean up the token info
@@ -162,12 +161,12 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 				author: info.id,
 			});
 			res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-			res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 			res.setHeader('Access-Control-Allow-Credentials', true);
-			res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS, DELETE');
 			res.json(postDoc);
 		}
 	})
+	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
+	res.setHeader('Access-Control-Allow-Credentials', true);
 });
 
 // Update post, if file?.then delete old one, and upload new one, if !file?.then update rest info from the form
