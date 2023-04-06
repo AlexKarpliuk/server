@@ -96,7 +96,11 @@ app.get('/blog/profile', (req, res) => {
 	const { token } = req.cookies;
 	if (token) {
 		jwt.verify(token, secretKey, {}, (err, info) => {
-			if (err) throw err;
+			if (err) {
+				res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL)
+				throw err
+			};
+			res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
 			res.json(info);
 		})
 	}
