@@ -105,8 +105,10 @@ app.get('/blog/profile', (req, res) => {
 	if (token) {
 		jwt.verify(token, secretKey, {}, (err, info) => {
 			if (err) throw err;
-			res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+			res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
+			res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 			res.setHeader('Access-Control-Allow-Credentials', true);
+			res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS, DELETE');
 			res.json(info);
 		})
 	}
@@ -145,8 +147,10 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 					cover: id,
 					author: info.id,
 				});
-				res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+				res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
+				res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 				res.setHeader('Access-Control-Allow-Credentials', true);
+				res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS, DELETE');
 				res.json(postDoc);
 			})
 		} else {
@@ -157,8 +161,10 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 				cover: id,
 				author: info.id,
 			});
-			res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+			res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
+			res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 			res.setHeader('Access-Control-Allow-Credentials', true);
+			res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS, DELETE');
 			res.json(postDoc);
 		}
 	})
