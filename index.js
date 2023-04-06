@@ -92,6 +92,7 @@ app.post('/blog/login', async (req, res) => {
 
 // Profile info
 app.get('/blog/profile', (req, res) => {
+	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
 	const { token } = req.cookies;
 	if (token) {
 		jwt.verify(token, secretKey, {}, (err, info) => {
@@ -108,6 +109,7 @@ app.post('/blog/logout', (req, res) => {
 
 // Upload post info from the frontend to the MongoDB
 app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
+	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
 	const { token } = req.cookies;
 	jwt.verify(token, secretKey, {}, async (err, info) => {
 		if (err) throw err;
