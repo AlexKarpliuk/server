@@ -15,17 +15,10 @@ const app = express()
 
 app.use(express.json());
 app.use(cookieParser());
-// app.use(cors({
-// 	origin: process.env.REACT_APP_BASE_CORS_URL,
-// 	credentials: true
-// }));
-app.use((req, res, next) => {
-	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-	res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-	res.setHeader('Access-Control-Allow-Credentials', true);
-	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS, DELETE');
-	next();
-});
+app.use(cors({
+	origin: process.env.REACT_APP_BASE_CORS_URL,
+	credentials: true
+}));
 
 
 const connectDB = async () => {
