@@ -17,8 +17,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
 	origin: process.env.REACT_APP_BASE_CORS_URL,
-	credentials: true
-}));
+	credentials: true}));
 app.use((req, res, next) => {
 	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
 	res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -100,10 +99,12 @@ app.post('/blog/login', async (req, res) => {
 // Profile info
 app.get('/blog/profile', (req, res) => {
 	const { token } = req.cookies;
-	jwt.verify(token, secretKey, {}, (err, info) => {
-		if (err) throw err;
-		res.json(info);
-	})
+	if (token) {
+		jwt.verify(token, secretKey, {}, (err, info) => {
+			if (err) throw err;
+			res.json(info);
+		})
+	}
 });
 
 // Logout, clean up the token info
