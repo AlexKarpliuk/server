@@ -115,9 +115,7 @@ app.post('/blog/logout', (req, res) => {
 
 // Upload post info from the frontend to the MongoDB
 app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
-	res.setHeader('Access-Control-Allow-Origin', 'https://alex-karpliuk-portfolio.vercel.app');
-	res.setHeader('Access-Control-Allow-Methods', 'POST');
-	res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+	res.setHeader('Access-Control-Allow-Origin', 'https://alex-karpliuk-portfolio.vercel.app/blog/create');
 	const { token } = req.cookies;
 	jwt.verify(token, secretKey, {}, async (err, info) => {
 		if (err) throw err;
