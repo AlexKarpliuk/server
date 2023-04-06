@@ -102,6 +102,8 @@ app.get('/blog/profile', (req, res) => {
 	if (token) {
 		jwt.verify(token, secretKey, {}, (err, info) => {
 			if (err) throw err;
+			res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+			res.setHeader('Access-Control-Allow-Credentials', true);
 			res.json(info);
 		})
 	}
