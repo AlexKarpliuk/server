@@ -19,13 +19,13 @@ app.use(cors({
 	origin: process.env.REACT_APP_BASE_CORS_URL,
 	credentials: true
 }));
-app.use((req, res, next) => {
-	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-	res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-	res.setHeader('Access-Control-Allow-Credentials', true);
-	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS, DELETE');
-	next();
-});
+// app.use((req, res, next) => {
+// 	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
+// 	res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+// 	res.setHeader('Access-Control-Allow-Credentials', true);
+// 	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS, DELETE');
+// 	next();
+// });
 
 
 const connectDB = async () => {
@@ -103,13 +103,9 @@ app.get('/blog/profile', (req, res) => {
 	if (token) {
 		jwt.verify(token, secretKey, {}, (err, info) => {
 			if (err) throw err;
-			res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-			res.setHeader('Access-Control-Allow-Credentials', true);
 			res.json(info);
 		})
 	}
-	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-	res.setHeader('Access-Control-Allow-Credentials', true);
 });
 
 // Logout, clean up the token info
@@ -145,10 +141,6 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 					cover: id,
 					author: info.id,
 				});
-				res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-				res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-				res.setHeader('Access-Control-Allow-Credentials', true);
-				res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, OPTIONS, DELETE');
 				res.json(postDoc);
 			})
 		} else {
@@ -159,13 +151,9 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 				cover: id,
 				author: info.id,
 			});
-			res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-			res.setHeader('Access-Control-Allow-Credentials', true);
 			res.json(postDoc);
 		}
 	})
-	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-	res.setHeader('Access-Control-Allow-Credentials', true);
 });
 
 // Update post, if file?.then delete old one, and upload new one, if !file?.then update rest info from the form
