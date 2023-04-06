@@ -110,7 +110,6 @@ app.get('/blog/profile', (req, res) => {
 	}
 	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
 	res.setHeader('Access-Control-Allow-Credentials', true);
-
 });
 
 // Logout, clean up the token info
