@@ -142,6 +142,8 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 					cover: id,
 					author: info.id,
 				});
+				res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+				res.setHeader('Access-Control-Allow-Credentials', true);
 				res.json(postDoc);
 			})
 		} else {
@@ -152,6 +154,8 @@ app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 				cover: id,
 				author: info.id,
 			});
+			res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+			res.setHeader('Access-Control-Allow-Credentials', true);
 			res.json(postDoc);
 		}
 	})
