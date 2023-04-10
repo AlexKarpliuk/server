@@ -32,8 +32,7 @@ app.use(cors({
 	res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
 	const options = {
 	  sameSite: 'none',
-	  secure: true,
-	  httpOnly: true
+	  secure: true
 	};
 	res.cookie('cookieName', 'cookieValue', options);
 	next();
