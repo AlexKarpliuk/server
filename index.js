@@ -15,10 +15,19 @@ const app = express()
 
 app.use(express.json());
 app.use(cookieParser());
+// app.use(cors({
+// 	origin: process.env.REACT_APP_BASE_CORS_URL,
+// 	credentials: true
+// }));
 app.use(cors({
 	origin: process.env.REACT_APP_BASE_CORS_URL,
-	credentials: true
-}));
+	credentials: true,
+	allowedHeaders: ['Content-Type', 'Authorization'],
+	methods: ['GET', 'POST', 'PUT', 'DELETE'],
+	preflightContinue: false,
+	optionsSuccessStatus: 204,
+	maxAge: 3600
+ }));
 
 
 const connectDB = async () => {
