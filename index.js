@@ -92,19 +92,18 @@ app.post('/blog/login', async (req, res) => {
 
 // Profile info
 app.get('/blog/profile', (req, res) => {
-	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
 	const { token } = req.cookies;
-	if (token) {
-		jwt.verify(token, secretKey, {}, (err, info) => {
-			if (err) {
-				res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL)
-				throw err
-			};
-			res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-			res.json(info);
-		})
+	// console.log(req.cookies)
+	if (!token) {
+	  // If token is empty, send an appropriate response to the client
+	  res.status(400).json({ message: 'Token is missing' });
+	} else {
+	  jwt.verify(token, secretKey, {}, (err, info) => {
+		 if (err) throw err;
+		 res.json(info);
+	  });
 	}
-});
+ });
 
 // Logout, clean up the token info
 app.post('/blog/logout', (req, res) => {
@@ -113,7 +112,6 @@ app.post('/blog/logout', (req, res) => {
 
 // Upload post info from the frontend to the MongoDB
 app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
-	res.setHeader('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
 	const { token } = req.cookies;
 	jwt.verify(token, secretKey, {}, async (err, info) => {
 		if (err) throw err;
