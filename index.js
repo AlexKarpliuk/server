@@ -16,10 +16,6 @@ const app = express()
 
 app.use(express.json());
 app.use(cookieParser());
-// app.use(cors({
-// 	origin: process.env.REACT_APP_BASE_CORS_URL,
-// 	credentials: true
-// }));
 app.use(cors({
 	origin: process.env.REACT_APP_BASE_CORS_URL,
 	credentials: true,
@@ -104,7 +100,6 @@ app.post('/blog/login', async (req, res) => {
 // Profile info
 app.get('/blog/profile', (req, res) => {
 	const { token } = req.cookies;
-	// console.log(req.cookies)
 	if (!token) {
 	  // If token is empty, send an appropriate response to the client
 	  res.status(400).json({ message: 'Token is missing' });
@@ -124,7 +119,6 @@ app.post('/blog/logout', (req, res) => {
 // Upload post info from the frontend to the MongoDB
 app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 	const { token } = req.cookies;
-	console.log(req.cookies)
 	jwt.verify(token, secretKey, {}, async (err, info) => {
 		if (!token) {
 			console.error(err);
