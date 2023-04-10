@@ -123,7 +123,10 @@ app.post('/blog/logout', (req, res) => {
 app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 	const { token } = req.cookies;
 	jwt.verify(token, secretKey, {}, async (err, info) => {
-		if (err) throw err;
+		if (err) {
+			console.error(err);
+			return res.status(401).json({ message: 'Unauthorized' });
+		 }
 		const { title, summary, content } = req.body;
 		let id = '';
 		if (req.file) {
