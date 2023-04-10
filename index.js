@@ -122,8 +122,9 @@ app.post('/blog/logout', (req, res) => {
 // Upload post info from the frontend to the MongoDB
 app.post('/blog/post', uploadMiddleware.single('file'), async (req, res) => {
 	const { token } = req.cookies;
+	console.log(req.cookies)
 	jwt.verify(token, secretKey, {}, async (err, info) => {
-		if (err) {
+		if (!token) {
 			console.error(err);
 			return res.status(401).json({ message: 'Unauthorized' });
 		 }
