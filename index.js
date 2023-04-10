@@ -113,7 +113,11 @@ app.get('/blog/profile', (req, res) => {
 
 // Logout, clean up the token info
 app.post('/blog/logout', (req, res) => {
-	res.cookie('token', '').json('ok');
+	res.cookie('token', '', {
+		httpOnly: true,
+		secure: true,
+		sameSite: 'none'
+	}).json('ok');
 });
 
 // Upload post info from the frontend to the MongoDB
