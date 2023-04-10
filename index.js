@@ -9,6 +9,7 @@ const { GridFSBucket, MongoClient, ObjectId } = require('mongodb');
 const { Readable } = require('stream');
 const multer = require('multer')
 const cors = require('cors')
+const cookie = require('cookie');
 require('dotenv').config();
 mongoose.set('strictQuery', true);
 const app = express()
@@ -24,10 +25,19 @@ app.use(cors({
 	credentials: true,
 	allowedHeaders: ['Content-Type', 'Authorization'],
 	methods: ['GET', 'POST', 'PUT', 'DELETE'],
-	preflightContinue: false,
-	optionsSuccessStatus: 204,
-	maxAge: 3600
  }));
+ app.use((req, res, next) => {
+	res.header('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
+	res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+	res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+	const options = {
+	  sameSite: 'none',
+	  secure: true,
+	  httpOnly: true
+	};
+	res.cookie('cookieName', 'cookieValue', options);
+	next();
+ });
 
 
 const connectDB = async () => {
