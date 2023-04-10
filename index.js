@@ -26,17 +26,6 @@ app.use(cors({
 	allowedHeaders: ['Content-Type', 'Authorization'],
 	methods: ['GET', 'POST', 'PUT', 'DELETE'],
  }));
- app.use((req, res, next) => {
-	res.header('Access-Control-Allow-Origin', process.env.REACT_APP_BASE_CORS_URL);
-	res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-	res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-	const options = {
-	  sameSite: 'none',
-	  secure: true
-	};
-	res.cookie('cookieName', 'cookieValue', options);
-	next();
- });
 
 
 const connectDB = async () => {
@@ -98,7 +87,11 @@ app.post('/blog/login', async (req, res) => {
 	if (passOk) {
 		jwt.sign({ username, id: userDoc._id }, secretKey, {}, (err, token) => {
 			if (err) throw err;
-			res.cookie('token', token).json({
+			res.cookie('token', token, {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'none'
+			}).json({
 				id: userDoc._id,
 				username
 			});
